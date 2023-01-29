@@ -1,10 +1,30 @@
 #version 300 es
 precision mediump float;
 
-// Supplied vertex position attribute
+uniform mat4 uModelViewMatrix;
+uniform mat4 uProjectionMatrix;
+uniform mat4 uNormalMatrix;
+uniform vec3 uLightDirection;
+uniform vec4 uLightAmbient;
+uniform vec4 uLightDiffuse;
+uniform vec4 uMaterialDiffuse;
+
 in vec3 aVertexPosition;
+in vec3 aVertexNormal;
+
+out vec4 vVertexColor;
 
 void main(void) {
-  // Simply set the position in clipspace coordinates
-  gl_Position = vec4(aVertexPosition, 1.0);
+  vec3 N = vec3(uNormalMatrix * vec4(aVertexNormal, 1.0));
+  vec3 L = normalize(uLightDirection);
+  float lambertTerm = dot(N, -L);
+
+      // Ambient
+  vec4 Ia = uLightAmbient;
+      // Diffuse
+  vec4 Id = uMaterialDiffuse * uLightDiffuse * lambertTerm;
+
+      // Set varying to be used inside of fragment shader
+  vVertexColor = vec4(vec3(Ia + Id), 1.0);
+  gl_Position = uProjectionMatrix * uModelViewMatrix * vec4(aVertexPosition, 1.0);
 }
